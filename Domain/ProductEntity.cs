@@ -15,24 +15,31 @@ namespace Domain
         public decimal? RecommendedRetailPrice { get; private set; }
         public bool IsChillerStock { get; private set; }
         public int UnitPackageId { get; private set; }
-        public int OuterPackeageId { get; private set; }
+        public int OuterPackageId { get; private set; }
         public int LeadTimeDays { get; private set; }
         public decimal TypicalWeightPerUnit { get; private set; }
-        public decimal Taxrate { get; private set; }
+        public decimal TaxRate { get; private set; }
         public decimal UnitPrice { get; private set; }
 
+        private List<int> _stockGroupsIds;
+
+        public IReadOnlyCollection<int> StockGroupsIds => _stockGroupsIds.AsReadOnly();
+
         public ProductEntity(string name, int? colorId, int supplierId, int quantityPerOuter, decimal? recommendedRetailPrice,
-            bool isChillerStock, int unitPackageId, int outerPackeageId, int leadTimeDays, decimal typicalWeightPerUnit, decimal taxrate,
-            decimal unitPrice)
+            bool isChillerStock, int unitPackageId, int outerPackageId, int leadTimeDays, decimal typicalWeightPerUnit, decimal taxRate,
+            decimal unitPrice, IEnumerable<int> stockGroupsIds)
         {
             ValidatePrices(unitPrice, recommendedRetailPrice);
             ValidateName(name);
-            ValidateTaxRate(taxrate);
+            ValidateTaxRate(taxRate);
             ValidatePerOuter(quantityPerOuter);
             ValidateLeadTime(leadTimeDays);
             ValidateWeight(typicalWeightPerUnit);
-            ValidateIDS(supplierId, unitPackageId, outerPackeageId, colorId);
+            ValidateIDS(supplierId, unitPackageId, outerPackageId, colorId);
+            ValidateStockGroups(stockGroupsIds);
 
+
+            _stockGroupsIds = new List<int>(stockGroupsIds);
             UnitPrice = unitPrice;
             RecommendedRetailPrice = recommendedRetailPrice;
             Name = name;
@@ -41,10 +48,10 @@ namespace Domain
             QuantityPerOuter = quantityPerOuter;
             IsChillerStock = isChillerStock;
             UnitPackageId = unitPackageId;
-            OuterPackeageId = outerPackeageId;
+            OuterPackageId = outerPackageId;
             LeadTimeDays = leadTimeDays;
             TypicalWeightPerUnit = typicalWeightPerUnit;
-            Taxrate = taxrate;
+            TaxRate = taxRate;
             
         }
 
@@ -59,7 +66,7 @@ namespace Domain
 
             if(recommendedRetailPrice.HasValue && recommendedRetailPrice < unitPrice)
             {
-                throw new ArgumentException("precio unitario debe ser igual o menor a precio recomendando");
+                throw new ArgumentException("precio unitario debe ser igual o menor a precio recomendado");
             }
 
         }
@@ -134,8 +141,29 @@ namespace Domain
             {
                 throw new ArgumentException("el id del color debe ser mayor a 0");
             }
-        }
+         }
         
+        //p10
+        private void ValidateStockGroups(IEnumerable<int> stockGroupsIds)
+        {
+            if(stockGroupsIds == null)
+            {
+                throw new ArgumentException("la lista de grupos de stock no puede ser nula");
+            }
+            if (stockGroupsIds == null || !stockGroupsIds.Any())
+            {
+                throw new ArgumentException("la lista de grupos de stock no puede estar vacia");
+            }
+            if (stockGroupsIds.Any(n => n <= 0))
+            {
+                throw new ArgumentException("los ids de los grupos de stock deben ser mayores a 0");
+            }
+            if (stockGroupsIds.Count() != stockGroupsIds.Distinct().Count())
+            {
+                throw new ArgumentException("la lista de grupos de stock no puede contener ids duplicados");
+            }
+            
+        }
 
     }
 }
